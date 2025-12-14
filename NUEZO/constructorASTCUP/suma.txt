@@ -1,0 +1,26 @@
+<<CALCULAMOS LA SUMA DE 5 NUMEROS GUARDADOS EN UN ARRAY
+Para ello, usamos una funcion auxiliar que recibe el array por referencia y pide al usuario
+un numero para guardar en cada posicion del array.
+Y otra funcion auxiliar que calcula la suma de todas las posiciones del array y la devuelve>>
+
+silent pedirNums (znum chain(5) & arr){
+	for(znum i:= 0; i < 5; i+:=1){
+		arr[i] := zRead();
+	}
+}
+
+znum suma(znum chain(5) & arr){
+	znum s := 0;
+	for each (znum num in arr){
+		s +:= num;
+	}
+	return s;
+}
+
+znum engine(){
+	<<inicializamos un array de 5 posiciones a 0>>
+	znum chain (5) arr := [0];
+	pedirNums(arr);
+	zWrite(suma(arr));
+	return 0;
+}

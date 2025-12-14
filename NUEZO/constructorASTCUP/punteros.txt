@@ -1,0 +1,16 @@
+<<PUNTERO>>
+
+znum engine(){
+
+	znum x := 5;
+	<<asigno a p la direccion de x (p es puntero a x)>>
+	znum dir p := &x; 
+	zWrite(x); <<escribe 5>>
+	_p := 0;
+	zWrite(x); <<escribe 0>>
+	zWrite(_p); <<escribe 0>>
+	delete(p);
+
+	return 0;
+	
+}

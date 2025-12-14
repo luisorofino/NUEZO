@@ -1,0 +1,27 @@
+======= BIENVENIDO A NUEZO ========
+
+--> Para compilar nuestro codigo, se ejecuta desde este directorio el comando
+
+$ ./compilar.sh
+
+--> Para probar los distintos nombre.txt de ejemplo se ejecuta el comando
+
+$ ./nombre.sh
+
+(donde nombre es el ejemplo deseado, sin necesidad de volver a compilar entre ejemplos)
+
+--> Esto generara el archivo codigo.wasm en este mismo directorio y sera el ejecutable.
+
+* Hay algunos ejemplos que piden datos de entrada y otros que no. Todos muestran por pantalla algo.
+
+--> Los comandos especificos para cada ejemplo son:
+
+$ ./recursion.sh
+
+$ ./punteros.sh
+
+$ ./structs.sh
+
+$ ./arrays.sh
+
+$ ./suma.sh

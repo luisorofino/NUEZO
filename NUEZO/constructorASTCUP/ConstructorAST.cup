@@ -1,0 +1,292 @@
+package constructorast;
+
+import java_cup.runtime.*;
+import alex.AnalizadorLexicoExp;
+import alex.UnidadLexica;
+import errors.GestionErroresExp;
+import alex.TokenValue;
+
+import ast.*;
+import ast.expresionP.*;
+import ast.lineaP.*;
+import ast.lineaP.funcionP.*;
+import ast.lineaP.buclesP.*;
+import ast.tiposP.*;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+scan with {: return getScanner().next_token(); :};
+parser code {: 
+   private GestionErroresExp errores;
+   public void syntax_error(Symbol unidadLexica) {
+     errores.errorSintactico((UnidadLexica)unidadLexica);
+   }
+:};
+init with {: 
+   errores = new GestionErroresExp();
+   AnalizadorLexicoExp alex = (AnalizadorLexicoExp)getScanner();
+   alex.fijaGestionErrores(errores);
+:};
+
+
+terminal MAS, MENOS, POR, DIV, DIVENT, MODUL, MASPREF, MENOSPREF, PORPREF, DIVPREF, DIVENTPREF, MODULPREF, ASIG, IGUAL, DISTINTO, NEGACION, MAYOR, MENOR, MAYORIGUAL, MENORIGUAL, PAP, PCIERRE, CAP, CCIERRE, LAP, LCIERRE, COMA, PUNTO, PUNTOCOMA, BARRABAJA, ZNUM, RNUM, STATE, ON, OFF, AND, OR, CHAIN, DIR, NEW, BLOCK, ENGINE, SILENT, ZREAD, ZWRITE, RREAD, RWRITE, SREAD, SWRITE, TOR, TOZ, RENAME, AS, WHILE, FOR, EACH, IN, IF, ELIF, ELSE, RETURN, AMPERSAND, DELETE, DEFINE;
+
+terminal TokenValue IDEN, ENT, REAL;
+
+non terminal Programa S;
+non terminal List<Instruccion> Globales;
+non terminal Funcion PROGENGINE;
+non terminal Declaracion DECLARACION;
+non terminal Asignacion As, ASIGNACION, OPASIGNACION;
+non terminal TipoAsig OPASIG;
+non terminal Expresion VALOR;
+
+non terminal Bucles BUCLE;
+non terminal While BUCLEWHILE;
+non terminal For BUCLEFOR;
+non terminal Instruccion AUXFOR;
+non terminal ForEach BUCLEFOREACH;
+
+non terminal Expresion E0, E1, E2, E3, E4, E5, E6, E7, E8, E9;
+non terminal KindAsig OP1, OP2, OP3, OP4;
+non terminal Constante CONSTANTE;
+non terminal Variable VARIABLE;
+
+non terminal Instruccion LINEACODIGO;
+
+non terminal Condicional CONDICIONALES;
+non terminal List<Condicional> CONTCOND;
+
+non terminal List<Instruccion> CUERPOCODIGO;
+non terminal DecVar DECVAR;
+non terminal Funcion DECFUNCION;
+non terminal List<Argumento> ARGUMENTOS;
+non terminal Argumento ARGUMENTO;
+non terminal Block BLOQUE;
+non terminal List<DecVar> ATRIBUTOS;
+non terminal DecVar ATRIBUTO;
+
+non terminal Tipo TIPO, TIPOBASICO, TIPOCOMP, TIPAUX, ARRAY;
+non terminal ArrayList<ZNum> TAM;
+
+non terminal Alias ALIAS;
+non terminal Llamada LLAMADAFUNCION;
+non terminal List<Expresion> LISTARGS;
+non terminal Return LINEARET;
+non terminal Escritura ESCRITURA;
+non terminal Lectura LECTURA;
+non terminal IniPuntero INIPUNTERO;
+non terminal IniArray INIARRAY;
+non terminal IniBlock INIBLOCK;
+non terminal ArrayList<Expresion> LISTAVALOR;
+non terminal Delete LINEADELETE;
+
+
+S   ::= Globales:lgobs PROGENGINE:engine {: lgobs.add(engine) ; RESULT = new Programa(lgobs); :};
+
+Globales ::= Globales:lgobs DECLARACION:dec {:lgobs.add(dec); RESULT = lgobs;:} 
+| {:RESULT = new ArrayList<Instruccion>();:};
+
+DECLARACION ::= DECVAR:dec {:RESULT = dec;:} 
+| DECFUNCION:dec  {:RESULT = dec;:}
+| ALIAS:al {:RESULT = al;:}
+| BLOQUE:bl {:RESULT = bl;:}
+| DEFINE TIPO:tipo IDEN:id ASIG VALOR:val PUNTOCOMA {:RESULT = new DecVar(tipo,id.lexema,val,1);:};
+		
+DECVAR ::= TIPO:tipo IDEN:id ASIG VALOR:val PUNTOCOMA {:RESULT = new DecVar(tipo,id.lexema,val);:}
+| TIPO:tipo IDEN:iden PUNTOCOMA {:RESULT = new DecVar(tipo,iden.lexema);:}
+| error PUNTOCOMA
+	{: System.out.println("ERROR en la DECLARACION"); RESULT = null; :};
+
+As ::= ASIGNACION:as {:RESULT = as;:} | OPASIGNACION:as {:RESULT = as;:};
+
+ASIGNACION ::= E0:e ASIG VALOR:val {:RESULT = new Asignacion(e, TipoAsig.ASIG, val);:};
+OPASIGNACION ::= E0:e OPASIG:op VALOR:val {:RESULT = new Asignacion(e, op, val);:};
+
+OPASIG ::= MASPREF {:RESULT = TipoAsig.MASPREF;:} 
+| MENOSPREF {:RESULT = TipoAsig.MENOSPREF;:} 
+| PORPREF {:RESULT = TipoAsig.PORPREF;:} 
+| DIVPREF {:RESULT = TipoAsig.DIVPREF;:}
+| DIVENTPREF {:RESULT = TipoAsig.DIVENTPREF;:}
+| MODULPREF {:RESULT = TipoAsig.MODULPREF;:};
+
+TIPO ::= TIPOBASICO:tipoB {: RESULT = tipoB; :}
+| TIPOCOMP:tipoC {: RESULT = tipoC; :}
+| IDEN:id {: RESULT = new TipoNombre(id.lexema); :};
+
+TIPOBASICO ::= ZNUM {: RESULT = new TipoBasico(KindTipo.ZNUM); :}
+| RNUM {: RESULT = new TipoBasico(KindTipo.RNUM); :}
+| STATE {: RESULT = new TipoBasico(KindTipo.STATE); :}
+| SILENT {: RESULT = new TipoBasico(KindTipo.SILENT); :};
+
+TIPOCOMP ::= ARRAY:arr {: RESULT = arr; :} 
+| TIPAUX:tipo DIR {: RESULT = new TipoPuntero(tipo); :};
+
+ARRAY ::= TIPAUX:tipo CHAIN PAP TAM:tam ENT:z PCIERRE 
+{: tam.add(new ZNum(z.lexema)); RESULT = new TipoArray(tipo,tam); :};
+
+TAM ::= TAM:tam ENT:z COMA {: tam.add(new ZNum(z.lexema)); RESULT = tam; :}
+| {: RESULT = new ArrayList<ZNum>(); :};
+
+TIPAUX ::= TIPOBASICO:tipoB {: RESULT = tipoB; :}
+| IDEN:id {: RESULT = new TipoNombre(id.lexema); :} 
+| PAP TIPOCOMP:tipo PCIERRE {: RESULT = new TipoAux(tipo); :};
+
+VALOR ::= E0:e {:RESULT = e;:} 
+| LECTURA:l {:RESULT = l;:} 
+| INIPUNTERO:i {:RESULT = i;:} 
+| INIARRAY:i {:RESULT = i;:} 
+| INIBLOCK:i {:RESULT = i;:} ;
+
+PROGENGINE ::= ZNUM ENGINE PAP PCIERRE LAP CUERPOCODIGO:cuerpo LCIERRE
+{:RESULT = new Funcion(new TipoBasico(KindTipo.ZNUM), "engine", new ArrayList<Argumento>(), cuerpo);:}
+| ZNUM ENGINE error LAP CUERPOCODIGO LCIERRE
+	{:System.out.println("ERROR en el ENGINE"); RESULT = null; :};
+
+CUERPOCODIGO ::= CUERPOCODIGO:cuerpo LINEACODIGO:linea {:cuerpo.add(linea); RESULT = cuerpo;:} 
+| {:RESULT = new ArrayList<Instruccion>();:};
+
+LINEACODIGO ::=  CONDICIONALES:c {:RESULT = c;:}| DECVAR:dec {:RESULT = dec;:} 
+| BUCLE:b {: RESULT = b; :}| LINEARET:r {: RESULT = r; :} 
+| LLAMADAFUNCION:llam PUNTOCOMA{:RESULT = llam;:}  
+| ESCRITURA:e PUNTOCOMA {:RESULT = e;:}
+| LINEADELETE:del PUNTOCOMA{: RESULT = del; :}
+| As:as PUNTOCOMA {:RESULT = as;:}
+| error {:System.out.println("ERROR: INSTRUCCION NO VALIDA"); RESULT = null;:};
+
+LINEARET ::= RETURN PUNTOCOMA {:RESULT = new Return();:} 
+| RETURN E0:e PUNTOCOMA {:RESULT = new Return(e);:};
+
+LINEADELETE ::= DELETE E0:e {:RESULT = new Delete(e); :};
+
+E0 ::= E0:e1 OR E1:e2 {: RESULT = new ExpBinaria(e1,e2,KindAsig.OR);:}
+| E1:e {: RESULT = e; :};
+
+E1 ::= E1:e1 AND E2:e2 {: RESULT = new ExpBinaria(e1,e2,KindAsig.AND);:}
+| E2:e {: RESULT = e; :};
+
+E2 ::= NEGACION E2:e {: RESULT = new ExpUnaria(e,KindAsig.NEGACION); :}
+| E3:e {: RESULT = e; :};
+
+E3 ::= E4:e1 OP4:op E4:e2 {: RESULT = new ExpBinaria(e1,e2,op);:}
+| E4:e {: RESULT = e; :};
+
+E4 ::= E5:e1 OP3:op E5:e2 {: RESULT = new ExpBinaria(e1,e2,op);:}
+| E5:e {: RESULT = e; :};
+
+E5 ::= E5:e1 OP2:op E6:e2 {: RESULT = new ExpBinaria(e1,e2,op);:}
+| E6:e {: RESULT = e; :};
+
+E6 ::= E6:e1 OP1:op E7:e2 {: RESULT = new ExpBinaria(e1,e2,op);:}
+| E7:e {: RESULT = e; :};
+
+E7 ::= AMPERSAND E8:e {: RESULT = new ExpUnaria(e,KindAsig.AMPERSAND); :} 
+| BARRABAJA E8:e {: RESULT = new ExpUnaria(e,KindAsig.BARRABAJA); :} 
+| E8:e {: RESULT = e; :};
+
+E8 ::= E9:e PUNTO IDEN:id {: RESULT = new ExpAccesoBlock(e,id.lexema); :}
+| E9:e {: RESULT = e; :};
+
+E9 ::= CONSTANTE:c {: RESULT = c; :}
+| VARIABLE:var {: RESULT = var; :}
+| E9:e1 CAP E0:e2 CCIERRE {: RESULT = new ExpAccesoArray(e1,e2); :}
+| LLAMADAFUNCION:call {: RESULT = new ExpLlamada(call); :}
+| TOR PAP E0:e PCIERRE {: RESULT = new ExpCambioTipo(KindAsig.TOR,e); :}
+| TOZ PAP E0:e PCIERRE {: RESULT = new ExpCambioTipo(KindAsig.TOZ,e); :}
+| PAP E0:e PCIERRE {: RESULT = new ExpPar(e); :};
+
+OP1 ::= POR {: RESULT = KindAsig.POR; :}
+| DIVENT {: RESULT = KindAsig.DIVENT; :}
+| MODUL {: RESULT = KindAsig.MODUL; :}
+| DIV {: RESULT = KindAsig.DIV; :};
+OP2 ::= MAS {: RESULT = KindAsig.MAS; :}
+| MENOS {: RESULT = KindAsig.MENOS; :};
+OP3 ::= MAYOR {: RESULT = KindAsig.MAYOR; :}
+| MENOR {: RESULT = KindAsig.MENOR; :}
+| MAYORIGUAL {: RESULT = KindAsig.MAYORIGUAL; :}
+| MENORIGUAL {: RESULT = KindAsig.MENORIGUAL; :};
+OP4 ::= IGUAL {: RESULT = KindAsig.IGUAL; :}
+| DISTINTO {: RESULT = KindAsig.DISTINTO; :};
+
+CONSTANTE ::= ENT:z {: RESULT = new ZNum(z.lexema); :}
+| REAL:r {: RESULT = new RNum(r.lexema); :}
+| ON {: RESULT = new State(KindAsig.ON); :}
+| OFF {: RESULT = new State(KindAsig.OFF); :};
+
+VARIABLE ::= IDEN:id {: RESULT = new Variable(id.lexema); :};
+
+BUCLE ::= BUCLEWHILE:bw {:RESULT = bw;:} | BUCLEFOR:bf {:RESULT = bf;:} | BUCLEFOREACH:bfe {:RESULT = bfe;:};
+
+BUCLEWHILE ::= WHILE PAP E0:e PCIERRE LAP CUERPOCODIGO:cuerpo LCIERRE 
+		{:RESULT = new While(e,cuerpo);:}
+		| WHILE error LAP CUERPOCODIGO LCIERRE {:System.out.println("ERROR en el BUCLE WHILE"); RESULT = null;:};
+
+BUCLEFOR ::= FOR PAP AUXFOR:aux PUNTOCOMA E0:e PUNTOCOMA As:as PCIERRE LAP CUERPOCODIGO:cuerpo LCIERRE
+		{:RESULT = new For(aux, e, as, cuerpo);:}
+		| FOR error LAP CUERPOCODIGO LCIERRE {:System.out.println("ERROR en el BUCLE FOR"); RESULT = null;:};
+AUXFOR ::= TIPO:tipo IDEN:id ASIG VALOR:val {:RESULT = new DecVar(tipo,id.lexema,val);:}
+| ASIGNACION:as {:RESULT = as;:};
+
+BUCLEFOREACH ::= FOR EACH PAP TIPO:t IDEN:id1 IN IDEN:id2 PCIERRE LAP CUERPOCODIGO:cuerpo LCIERRE 
+		{:RESULT = new ForEach(t,id1.lexema, id2.lexema, cuerpo);:}
+		| FOR EACH error LAP CUERPOCODIGO LCIERRE {:System.out.println("ERROR en el BUCLE FOR EACH"); RESULT = null;:};
+
+CONDICIONALES ::= IF PAP E0:e PCIERRE LAP CUERPOCODIGO:cuerpo LCIERRE CONTCOND:lcond
+		{:RESULT = new Condicional(0,e,cuerpo,lcond);:}
+		| IF error LAP CUERPOCODIGO LCIERRE {:System.out.println("ERROR en el CONDICIONAL"); RESULT = null;:};
+CONTCOND ::= ELSE LAP CUERPOCODIGO:cuerpo LCIERRE 
+	{:RESULT = new ArrayList<Condicional>(Arrays.asList(new Condicional(2,null,cuerpo,null)));:}|
+	ELIF PAP E0:e PCIERRE LAP CUERPOCODIGO:cuerpo LCIERRE CONTCOND:lcond 
+	{:lcond.add(new Condicional(1,e,cuerpo,null)); RESULT = lcond;:}
+	| {:RESULT = new ArrayList<Condicional>();:};
+
+ALIAS ::= RENAME TIPAUX:tipo AS IDEN:id {: RESULT = new Alias(tipo,id.lexema); :};
+
+BLOQUE ::= BLOCK LAP ATRIBUTOS:ats LCIERRE IDEN:id PUNTOCOMA {:RESULT = new Block(id.lexema, ats);:};
+
+ATRIBUTOS ::= ATRIBUTOS:ats COMA ATRIBUTO:at {:ats.add(at); RESULT = ats;:} |
+	      ATRIBUTO:at {:RESULT = new ArrayList<DecVar>(Arrays.asList(at));:};
+ATRIBUTO ::= TIPO:tipo IDEN:iden {:RESULT = new DecVar(tipo,iden.lexema);:} |
+	     TIPO:tipo IDEN:iden ASIG VALOR:val {:RESULT = new DecVar(tipo,iden.lexema, val);:};
+
+DECFUNCION ::= TIPO:tipo IDEN:id PAP ARGUMENTOS:args PCIERRE LAP CUERPOCODIGO:cuerpo LCIERRE
+{:RESULT = new Funcion(tipo, id.lexema, args, cuerpo);:} 
+| TIPO:tipo IDEN:id PAP PCIERRE LAP CUERPOCODIGO:cuerpo LCIERRE
+{:RESULT = new Funcion(tipo, id.lexema, new ArrayList<Argumento>(), cuerpo);:}
+| TIPO IDEN error LAP CUERPOCODIGO LCIERRE
+	{: System.out.println("ERROR en la declaracion de la FUNCION"); RESULT = null; :};
+
+ARGUMENTOS ::= ARGUMENTOS:args COMA ARGUMENTO:arg {:args.add(arg); RESULT = args;:} |
+	       ARGUMENTO:arg {:RESULT = new ArrayList<Argumento>(Arrays.asList(arg));:}
+	       | error {:System.out.println("ERROR en los ARGUMENTOS de la funcion"); RESULT = null;:};
+ARGUMENTO ::= TIPO:tipo AMPERSAND IDEN:id {: RESULT  = new Argumento(tipo, id.lexema, 1); :} |
+	      TIPO:tipo IDEN:id {: RESULT  = new Argumento(tipo, id.lexema, 0); :};
+
+LLAMADAFUNCION ::= IDEN:id PAP LISTARGS:l PCIERRE {:RESULT = new Llamada(id.lexema, l);:}|
+		IDEN:id PAP PCIERRE {:RESULT = new Llamada(id.lexema, new ArrayList<Expresion>());:};
+LISTARGS ::=  LISTARGS:l COMA E0:e {:l.add(e); RESULT = l;:}
+| E0:e {:RESULT = new ArrayList<Expresion>(Arrays.asList(e));:} ;
+
+LECTURA ::= ZREAD PAP PCIERRE {:RESULT = new Lectura(0);:}|
+	RREAD PAP PCIERRE {:RESULT = new Lectura(1);:}|
+	SREAD PAP PCIERRE {:RESULT = new Lectura(2);:};
+
+ESCRITURA ::= ZWRITE PAP E0:e PCIERRE {:RESULT = new Escritura(0,e);:}|
+		RWRITE PAP E0:e PCIERRE {:RESULT = new Escritura(1,e);:}|
+		SWRITE PAP E0:e PCIERRE {:RESULT = new Escritura(2,e);:};
+
+INIPUNTERO ::= NEW TIPAUX:tipo {: RESULT = new IniPuntero(tipo); :} 
+| NEW TIPAUX:tipo PAP E0:e PCIERRE {: RESULT = new IniPuntero(tipo,e); :}
+| NEW TIPAUX error {:System.out.println("ERROR en la declaracion del PUNTERO"); RESULT = null;:};
+
+INIARRAY ::= LAP LISTAVALOR:lvals LCIERRE {: RESULT = new IniArray(lvals); :}
+| CAP VALOR:val CCIERRE {: RESULT = new IniArray(val); :}
+| CAP error CCIERRE {:System.out.println("ERROR en la declaracion del ARRAY"); RESULT = null;:};
+
+INIBLOCK ::= MENOR PAP LISTAVALOR:lvals PCIERRE MAYOR {: RESULT = new IniBlock(lvals); :}
+| MENOR PAP error PCIERRE MAYOR {:System.out.println("ERROR en la declaracion del BLOCK"); RESULT = null;:};
+
+LISTAVALOR ::= LISTAVALOR:lvals COMA VALOR:val {: lvals.add(val); RESULT = lvals; :}
+| VALOR:val {:RESULT = new ArrayList<Expresion>(Arrays.asList(val));:};

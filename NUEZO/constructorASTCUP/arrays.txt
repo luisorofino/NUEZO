@@ -1,0 +1,22 @@
+<<RECORRER ARRAY>>
+
+silent recorrerArray( znum chain (2,4,2) & list){
+
+	for each (znum chain (4,2) arr in list){ <<recorremos cada dimension con un for each>>
+		for each (znum chain (2) arr2 in arr) {
+			for each (znum j in arr2) {
+				zWrite(j);
+			}
+		}
+	}
+}
+
+znum engine(){
+
+	znum chain (2,4,2) arr := [{[1],[2],[3],[4]}]; <<array de enteros de 3 dimensiones>>
+	(znum chain (4,2)) chain (2) arrCopia := arr; <<copia del array>>
+
+	recorrerArray(arrCopia);
+	
+	return 0;
+}

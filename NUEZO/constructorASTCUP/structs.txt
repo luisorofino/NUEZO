@@ -1,0 +1,24 @@
+<<PRUEBA DE STRUCTS (BLOCKS)>>
+
+<<definimos un tipo tPersona con algunos campos inicializados por defecto>>
+block {znum edad:=10, rnum altura, state casado := off} tPersona;
+<<sera nuestro struct>>
+
+znum engine(){
+	<<creamos un block de tipo tPersona>>
+	tPersona juan;
+	
+	<<comprobamos que se haya inicializado bien su campo edad (a 10 por defecto)>>
+	zWrite(juan.edad);
+	
+	<<asignamos otros valores a juan>>
+	juan := <( 35, 179.5, on )>;
+	
+	<<hacemos una copia de juan en otra variable>>
+	tPersona juanCopia := juan;
+	
+	<<comprobamos que ha copiado bien el valor>>
+	zWrite(juanCopia.edad);
+	
+	return 0;
+}

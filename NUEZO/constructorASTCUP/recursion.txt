@@ -1,0 +1,19 @@
+<<FACTORIAL DE LOS 10 PRIMEROS NUMEROS>>
+
+define znum N := 10;
+
+znum fact(znum x){
+	<<calculamos el valor de x factorial usando recursion>>
+	if(x == 1){
+		return 1;
+	}
+	return (fact(x - 1) * x);
+}
+
+znum engine(){
+	<<recorro los 10 primeros numeros y muestro el valor de su factorial>>
+	for(znum i:= 1; i <= N; i+:= 1){
+		zWrite(fact(i));
+	}
+	return 0;
+}
