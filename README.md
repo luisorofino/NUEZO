@@ -37,4 +37,4 @@ NUEZO es un lenguaje tipado que incluye características avanzadas de gestión d
 
 El proyecto incluye scripts de bash para facilitar la compilación y prueba de los ejemplos.
 
-Para más información sobre la ejecución, leer [este archivo](https://github.com/sergiio8/GeneticAlgorithms/blob/main/GASergio_Daniel.ipynb)
+Para más información sobre la ejecución, leer [este archivo](https://github.com/luisorofino/NUEZO/blob/main/NUEZO/constructorASTCUP/_LEER_ANTES_DE_EJECUTAR.txt)
