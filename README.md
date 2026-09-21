@@ -5,8 +5,8 @@
 **NUEZO** es un lenguaje de programación de propósito general diseñado e implementado como proyecto de la asignatura de **Procesadores de Lenguajes**. Combina características de C++, Java y Python para ofrecer una sintaxis intuitiva y accesible, compilando directamente a **WebAssembly (.wasm)**.
 
 ## Autores
-* **Daniel Casquero**
-* **Luis Orofino**
+* **Daniel Casquero** (https://github.com/DanielCP444)
+* **Luis Orofino** (https://github.com/luisorofino)
 
 ## Características del Lenguaje
 
